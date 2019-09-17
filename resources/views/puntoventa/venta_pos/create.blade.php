@@ -117,17 +117,39 @@
                 data:$('#formulario_venta').serialize(),
             }).done((data) => {
                  console.log(data);
-                // qz.websocket.connect().then(function() {
-                //     alert("Connected!");
-                // });
-                // qz.printers.find("POS").then(function(found) {
-                //     alert("Printer: " + found);
-                // });
-                // var config = qz.configs.create("POS-58");               // Exact printer name from OS
-                // var data = ['^XA^FO50,50^ADN,36,20^FDRAW ZPL EXAMPLE^FS^XZ'];
-                // qz.print(config, data).then(function() {
-                //     alert("Sent data to printer");
-                // });
+
+                /// Authentication setup ///
+                qz.security.setCertificatePromise(function(resolve, reject) {
+                    //Preferred method - from server
+                    //        $.ajax("assets/signing/digital-certificate.txt").then(resolve, reject);
+
+                    //Alternate method 1 - anonymous
+                    //        resolve();
+
+                    //Alternate method 2 - direct
+                    resolve("-----BEGIN CERTIFICATE-----\n" +
+                            "MIIDqTCCApGgAwIBAgIUeZiIaSLm8hWemZP5GaY1ga34KtswDQYJKoZIhvcNAQEL\n" +
+                            "BQAwYzELMAkGA1UEBhMCQ0wxDjAMBgNVBAgMBUNoaWxlMQ4wDAYDVQQHDAVBcmlj\n" +
+                            "YTEPMA0GA1UECgwGV2FsaWV4MQswCQYDVQQLDAJJVDEWMBQGA1UEAwwNd3d3Lndh\n" +
+                            "bGlleC5jbDAgFw0xOTA5MTcwNTEyMTlaGA8yMDUxMDMxMjA1MTIxOVowYzELMAkG\n" +
+                            "A1UEBhMCQ0wxDjAMBgNVBAgMBUNoaWxlMQ4wDAYDVQQHDAVBcmljYTEPMA0GA1UE\n" +
+                            "CgwGV2FsaWV4MQswCQYDVQQLDAJJVDEWMBQGA1UEAwwNd3d3LndhbGlleC5jbDCC\n" +
+                            "ASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMAHryhRuzPAttuEN6gop079\n" +
+                            "x3/dImUyHnwFufhi6g0hxrb2g7lvW4bN3Ff/DG0bHUmBUkDORW8rZ60hJ+iWoVig\n" +
+                            "SQyHxEhdw3wrhhsNxbOFgojAnRgA2Cyvvnf6OvzEkztJzgE/80TSzOtBz6Cv48vU\n" +
+                            "zV7BRwhgK6g1gtXvJxtOf70fLq/dthuvsyh98NJlN1GWrtLydp8R894C7Z/76roo\n" +
+                            "SiMvxbXfT5VBPFEjJoGNoFxd75hTfloAOiRKJWlPOdUG4KBeoR4RrWob6bhob/N9\n" +
+                            "mJGNk03X53OjX+krbsChbonJwgBxbVIk79ZwuNbKzxy4EjZ+NmvmF+lANSGxbbcC\n" +
+                            "AwEAAaNTMFEwHQYDVR0OBBYEFEa6AzCaZypgfHta/glL7aO4zdh3MB8GA1UdIwQY\n" +
+                            "MBaAFEa6AzCaZypgfHta/glL7aO4zdh3MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI\n" +
+                            "hvcNAQELBQADggEBAFO3SfPBTD7sCImd8dBliVzxrb1WtK47r5x7ZKeOTgjqpgYJ\n" +
+                            "U55Lyy6wyEWeGNNjOJokrivrlKj/RS+5gv8rjbRACnMT3CRrfS5E9Bd9LDfEt86u\n" +
+                            "aFwN0Hb09NaIoqtx78v/YtPz8zKr9yNlppeo59HXWoL5qJcIQtqvu5e45rMkHbFx\n" +
+                            "n/5x2IwXX+g/FhRl3SvKD5YWIOHnpfCqXRtonfkzzZQ81yjspjJCoLvcmFhwpayq\n" +
+                            "wJ9ZqbKfoPQ3VbyRMzJ53dCDEt4t55GP2zcLU46WxDeEdBLm2FZXTNIA2oDV++eK\n" +
+                            "EpHPFzdc93XXkc+zGrbTSsm4warZNd3EQY1ND4E=\n" +
+                            "-----END CERTIFICATE-----\n");
+                });
 
                 qz.websocket.connect().then(function() {
                     return qz.printers.find("POS");              // Pass the printer name into the next Promise
@@ -135,19 +157,9 @@
                     var config = qz.configs.create(printer);       // Create a default config for the found printer
                     var datos = [data];   // Raw ZPL
                     return qz.print(config, datos);
-                    
                 }).catch(function(e) { console.error(e); });
-                // w = window.open(data);
-                // w.print();
-
-                // var printwindow = window.open('', 'PRINT', 'height=400,width=600');
-                // printwindow.document.write(data);
-                // printwindow.document.close;
-                // printwindow.focus();
-                // printwindow.print();
-                // printwindow.close();
             }).fail((data) => {
-                console.log('no llegue');
+                console.log('Error AJAX');
             });
         });
 
