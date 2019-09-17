@@ -25,6 +25,7 @@ require __DIR__ . '/../../../vendor/mike42/escpos-php/autoload.php';
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\EscposImage;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use Mike42\Escpos\PrintConnectors\DummyPrintConnector;
 
 class VentaController extends Controller
 {
@@ -141,7 +142,8 @@ class VentaController extends Controller
             //LOGICA PARA REALIZAR LA IMPRESION DEL TICKET
             /** Conexión de la impresora */
             $nombre_impresora = "POS-58"; 
-            $connector = new WindowsPrintConnector($nombre_impresora);
+            $connector = new DummyPrintConnector();
+            //$connector = new DummyPrintConnector();
 
             $printer = new Printer($connector);
             // Vamos a alinear al centro lo próximo que imprimamos
@@ -155,7 +157,7 @@ class VentaController extends Controller
             $printer->text($empresa->nombre. "\n");
             $printer->text($empresa->direccion. "\n");
             $printer->text($empresa->comuna."\n");
-            $printer->text("Número de detalle ". $venta->numero_venta. "\n");
+            $printer->text("Numero de detalle ". $venta->numero_venta. "\n");
             #La fecha también
             $printer->text(date("d-m-Y H:i:s") . "\n");
             //$printer->text("\n");
@@ -194,9 +196,13 @@ class VentaController extends Controller
             $printer->setJustification(Printer::JUSTIFY_CENTER);
             $printer->text("Muchas gracias por su compra \n");
             $printer->text("\n");
+
+            $printer->text("\n");
+            $printer->text("\n");
+            $printer->text("\n");
            
             /*Alimentamos el papel 3 veces*/
-            $printer->feed(3);
+            //$printer->feed(3);
             /*  Cortamos el papel. Si nuestra impresora no tiene soporte para ello, no generará
                 ningún error
             */
@@ -204,9 +210,10 @@ class VentaController extends Controller
             /*  Por medio de la impresora mandamos un pulso. Esto es útil cuando la tenemos conectada
                 por ejemplo a un cajón
             */
-            $printer->pulse();
+            //$printer->pulse();
             /*  Para imprimir realmente, tenemos que "cerrar" la conexión con la impresora. Recuerda incluir esto al final de todos los archivos
             */
+            $data = $connector -> getData();
             $printer->close();
 
         }catch(\Exception $e)
@@ -215,7 +222,7 @@ class VentaController extends Controller
             //var_dump($e->getMessage());
             //exit();
         }
-        return Redirect::to('venta/nuevo');
+        return $data;
     }
 
     public function show($id)

@@ -1,6 +1,10 @@
 @extends('layouts.puntoventa')
 
-@section('contenido') 
+@section('contenido')
+
+<script type="text/javascript" src="{{asset("js/rsvp-3.1.0.min.js")}}"></script>
+<script type="text/javascript" src="{{asset("js/sha-256.min.js")}}"></script>
+<script type="text/javascript" src="{{asset("js/qz-tray.js")}}"></script>
 
 <div class="header">
     <div class="header-right">
@@ -8,14 +12,14 @@
     @if(Auth::user()->rol == 'Administrador')
         <a href="{{url('inicio')}}" class="button btn-default button2">Gestionar</a>
     @endif
-   
+
     <!--<button class="button button1 ">Cerrar Sesión</button>-->
     <a href="{{url('logout')}}" class="button btn-default button2">Salir</a>
     </div>
     <div class="col-lg-6 col-sm-2 col-md-2 col-xs-12 dato_empresa">
         <div class="borde_titulo">
             <b>Local:</b> {{ $datos_empresa->nombre}} / Dirección: {{$datos_empresa->direccion}}
-        </div>                  
+        </div>
     </div>
     <div class="header-center">
         <img src="{{asset('logos/vendeya_pos_final_2.png')}}" class="imagen">
@@ -25,7 +29,7 @@
 
 <div class="row encabezado_pos">
     <div class="container">
-        <!-- MI MODAL --> 
+        <!-- MI MODAL -->
         <div id="mi-modal" class="modal fade" role="dialog">
             <div class="modal-dialog">
                 <!-- CONTENIDO DEL MODAL-->
@@ -33,7 +37,7 @@
                     <form>
                     <div class="modal-body">
                         <h4>Ingrese Precio</h4>
-                        <div class="form-group">                                         
+                        <div class="form-group">
                             <label >VALOR PRODUCTO: </label>
                             <input type="text"  class="form-control"  name="precio_2" id="precio_2">
                         </div>
@@ -47,9 +51,9 @@
             </div>
         </div>
         <!-- TERMINA EL MODAL --->
-        <form id="formulario_venta" action="{{url('venta/ok')}}" method="POST">
+        <form id="formulario_venta" method="POST">
             @csrf
-            <br>   
+            <br>
             <div class="row">
             <div class="col-lg-6 col-sm-5 col-md-6 col-xs-12">
                     <div class="">
@@ -105,6 +109,48 @@
 @push('scripts')
 <script >
     $(document).ready(function(){
+        $('#formulario_venta').submit(function(e){
+            e.preventDefault();
+            $.ajax({
+                url:window.location.origin + '/venta/ok',
+                type:'post',
+                data:$('#formulario_venta').serialize(),
+            }).done((data) => {
+                 console.log(data);
+                // qz.websocket.connect().then(function() {
+                //     alert("Connected!");
+                // });
+                // qz.printers.find("POS").then(function(found) {
+                //     alert("Printer: " + found);
+                // });
+                // var config = qz.configs.create("POS-58");               // Exact printer name from OS
+                // var data = ['^XA^FO50,50^ADN,36,20^FDRAW ZPL EXAMPLE^FS^XZ'];
+                // qz.print(config, data).then(function() {
+                //     alert("Sent data to printer");
+                // });
+
+                qz.websocket.connect().then(function() {
+                    return qz.printers.find("POS");              // Pass the printer name into the next Promise
+                }).then(function(printer) {
+                    var config = qz.configs.create(printer);       // Create a default config for the found printer
+                    var datos = [data];   // Raw ZPL
+                    return qz.print(config, datos);
+                    
+                }).catch(function(e) { console.error(e); });
+                // w = window.open(data);
+                // w.print();
+
+                // var printwindow = window.open('', 'PRINT', 'height=400,width=600');
+                // printwindow.document.write(data);
+                // printwindow.document.close;
+                // printwindow.focus();
+                // printwindow.print();
+                // printwindow.close();
+            }).fail((data) => {
+                console.log('no llegue');
+            });
+        });
+
         $("#pagar").hide();
         //No hacer "enter" en formulario, solamente en el botón!
 		$("#formulario_venta").keypress(function(e) {
@@ -215,12 +261,12 @@
             precio_unitario = precio_unitario.replace(/[($)\s\._\-]+/g, '');
             precio_linea = precio_unitario;
             descuento = 0;
-            
+
             if( producto_id!="" && precio_unitario!="" && precio_linea!="")
             {
                 total=total+(cantidad*precio_unitario);
                 var fila=
-                '<tr class="selected " id="fila'+cont+'"><td class="col-xs-2"><button type="button" class="btn btn-warning" onclick="eliminar('+cont+');">x</button></td><td class="col-xs-2"><input type="hidden" name="producto_id[]" value="'+producto_id+'">'+producto+'</td><td class="col-xs-2"><input class="col-xs-9" type="hidden" id="cantidad_'+cont+'" name="cantidad[]" value="'+cantidad+'">'+cantidad+'</td><td class="col-xs-2"><input class="col-xs-4" type="hidden" id="precio_unitario_'+cont+'" name="precio_unitario[]" value="'+precio_unitario+'">'+new Intl.NumberFormat('es-CL').format(precio_unitario)+'</td><td class="col-xs-2"><input class="col-xs-9" type="number" id="descuento_'+cont+'" name="descuento[]" value="'+descuento+'" ></td><td class="col-xs-2"><input class="col-xs-2" type="hidden" id="precio_linea_'+cont+'" name="precio_linea[]" value="'+precio_linea+'"><h4 class="col-xs-2" id="precio_lin_'+cont+'"><b>'+new Intl.NumberFormat('es-CL').format(precio_linea)+'</b></h4></td></tr>';                                                              
+                '<tr class="selected " id="fila'+cont+'"><td class="col-xs-2"><button type="button" class="btn btn-warning" onclick="eliminar('+cont+');">x</button></td><td class="col-xs-2"><input type="hidden" name="producto_id[]" value="'+producto_id+'">'+producto+'</td><td class="col-xs-2"><input class="col-xs-9" type="hidden" id="cantidad_'+cont+'" name="cantidad[]" value="'+cantidad+'">'+cantidad+'</td><td class="col-xs-2"><input class="col-xs-4" type="hidden" id="precio_unitario_'+cont+'" name="precio_unitario[]" value="'+precio_unitario+'">'+new Intl.NumberFormat('es-CL').format(precio_unitario)+'</td><td class="col-xs-2"><input class="col-xs-9" type="number" id="descuento_'+cont+'" name="descuento[]" value="'+descuento+'" ></td><td class="col-xs-2"><input class="col-xs-2" type="hidden" id="precio_linea_'+cont+'" name="precio_linea[]" value="'+precio_linea+'"><h4 class="col-xs-2" id="precio_lin_'+cont+'"><b>'+new Intl.NumberFormat('es-CL').format(precio_linea)+'</b></h4></td></tr>';
                 cont++;
                 limpiar();
                 //$("#total").html("$ "+total);
@@ -231,6 +277,7 @@
             }
         });
     });
+
     var cont=0;
 	total=0;
     // Agregar productos a la tabla los normales por cantidad
@@ -239,7 +286,7 @@
         datosProducto=document.getElementById('producto_id').value.split('_');
         stock_actual = datosProducto[1];
         if(stock_actual == '99999')
-        {   
+        {
             $('#mi-modal').modal();
         }else{
             producto_id=datosProducto[0];
@@ -252,7 +299,7 @@
             {
                 total=total+(cantidad*precio_unitario);
                 var fila=
-                '<tr class="selected  " id="fila'+cont+'"><td class="col-xs-2"><button type="button" class="btn btn-warning" onclick="eliminar('+cont+');">x</button></td><td class="col-xs-2"><input type="hidden" name="producto_id[]" value="'+producto_id+'">'+producto+'</td><td class="col-xs-2"><input class="col-xs-9" type="number" id="cantidad_'+cont+'" name="cantidad[]" value="'+cantidad+'"></td><td class="col-xs-2"><input class="col-xs-4" type="hidden" id="precio_unitario_'+cont+'" name="precio_unitario[]" value="'+precio_unitario+'">'+new Intl.NumberFormat('es-CL').format(precio_unitario)+'</td><td class="col-xs-2"><input class="col-xs-9"  type="number" id="descuento_'+cont+'" name="descuento[]" value="'+descuento+'"></td><td class="col-xs-2"><input class="col-xs-2" type="hidden" id="precio_linea_'+cont+'" name="precio_linea[]" value="'+precio_linea+'"><h4 class="col-xs-2" id="precio_lin_'+cont+'"><b>'+new Intl.NumberFormat('es-CL').format(precio_linea)+'</b></h4></td></tr>';                                                             
+                '<tr class="selected  " id="fila'+cont+'"><td class="col-xs-2"><button type="button" class="btn btn-warning" onclick="eliminar('+cont+');">x</button></td><td class="col-xs-2"><input type="hidden" name="producto_id[]" value="'+producto_id+'">'+producto+'</td><td class="col-xs-2"><input class="col-xs-9" type="number" id="cantidad_'+cont+'" name="cantidad[]" value="'+cantidad+'"></td><td class="col-xs-2"><input class="col-xs-4" type="hidden" id="precio_unitario_'+cont+'" name="precio_unitario[]" value="'+precio_unitario+'">'+new Intl.NumberFormat('es-CL').format(precio_unitario)+'</td><td class="col-xs-2"><input class="col-xs-9"  type="number" id="descuento_'+cont+'" name="descuento[]" value="'+descuento+'"></td><td class="col-xs-2"><input class="col-xs-2" type="hidden" id="precio_linea_'+cont+'" name="precio_linea[]" value="'+precio_linea+'"><h4 class="col-xs-2" id="precio_lin_'+cont+'"><b>'+new Intl.NumberFormat('es-CL').format(precio_linea)+'</b></h4></td></tr>';
                 cont++;
                 limpiar();
                 //$("#total").html("$ "+total);
@@ -297,7 +344,7 @@
             }   //alert('Se debe pagar con un valor mayor o igual al total de venta');
             }
 		}
-    //Esta funcion verifica si se muestra el boton pagar, verifica lo demas 
+    //Esta funcion verifica si se muestra el boton pagar, verifica lo demas
     function evaluar2(){
         if($("#pagar").show() ){
             pago = $('#pago').val();
