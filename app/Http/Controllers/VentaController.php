@@ -143,7 +143,6 @@ class VentaController extends Controller
             /** Conexión de la impresora */
             $nombre_impresora = "POS-58"; 
             $connector = new DummyPrintConnector();
-            //$connector = new DummyPrintConnector();
 
             $printer = new Printer($connector);
             // Vamos a alinear al centro lo próximo que imprimamos
@@ -194,7 +193,7 @@ class VentaController extends Controller
             /* Podemos poner también un pie de página
             */
             $printer->setJustification(Printer::JUSTIFY_CENTER);
-            $printer->text("Muchas gracias por su compra \n");
+            $printer->text("Muchas gracias por su compra.\n");
             $printer->text("\n");
 
             $printer->text("\n");
