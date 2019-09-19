@@ -144,6 +144,18 @@ class VentaController extends Controller
             $nombre_impresora = "POS-58"; 
             $connector = new DummyPrintConnector();
 
+            $table = array(
+                'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'È'=>'E', 'É'=>'E', 
+                'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O',   // Tabla para sustituir
+                'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U', 'Ú'=>'U', 'Û'=>'U', 'Ü'=>'U', 'à'=>'a', 'á'=>'a',   // los caracteres con tilde
+                'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e', 'ê'=>'e',   // y ñ a símbolos legibles.
+                'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ò'=>'o', 'ó'=>'o', 'ô'=>'o',
+                'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'ý'=>'y', 'ñ'=>'{', 'Ñ'=>'}'
+            );
+            $tableN = array(
+                '{'=>'ñ', '}'=>'Ñ' // Tabla para volver los símbolos a ñ/Ñ y enviar devuelta al cliente.
+            );
+
             $printer = new Printer($connector);
             // Vamos a alinear al centro lo próximo que imprimamos
             $printer->setJustification(Printer::JUSTIFY_CENTER);
@@ -152,10 +164,10 @@ class VentaController extends Controller
             $empresa = DB::table('datos_empresa')->first();
             /*  Ahora vamos a imprimir un encabezado
             */
-            $printer->text($empresa->tipo. "\n");
-            $printer->text($empresa->nombre. "\n");
-            $printer->text($empresa->direccion. "\n");
-            $printer->text($empresa->comuna."\n");
+            $printer->text(strtr($empresa->tipo, $table). "\n");
+            $printer->text(strtr($empresa->nombre, $table). "\n");
+            $printer->text(strtr($empresa->direccion, $table). "\n");
+            $printer->text(strtr($empresa->comuna, $table)."\n");
             $printer->text("Numero de detalle ". $venta->numero_venta. "\n");
             #La fecha también
             $printer->text(date("d-m-Y H:i:s") . "\n");
@@ -176,7 +188,7 @@ class VentaController extends Controller
              
                 /*Alinear a la izquierda para la cantidad y el nombre*/
                 $printer->setJustification(Printer::JUSTIFY_LEFT);
-                $printer->text($producto->cantidad . " x $" . number_format($producto->precio_unitario,0,',','.'). " ". $producto->nombre ."\n");
+                $printer->text($producto->cantidad . " x $" . number_format($producto->precio_unitario,0,',','.'). " ". strtr($producto->nombre, $table) ."\n");
                 /*Y a la derecha para el importe*/
                 $printer->setJustification(Printer::JUSTIFY_RIGHT);
                 $printer->text(' $' . number_format($producto->cantidad * ($producto->precio_unitario - $producto->descuento),0,',','.') . "\n");
@@ -209,10 +221,11 @@ class VentaController extends Controller
             /*  Por medio de la impresora mandamos un pulso. Esto es útil cuando la tenemos conectada
                 por ejemplo a un cajón
             */
-            //$printer->pulse();
+            $printer->pulse();
             /*  Para imprimir realmente, tenemos que "cerrar" la conexión con la impresora. Recuerda incluir esto al final de todos los archivos
             */
-            $data = $connector -> getData();
+            $data = strtr($connector -> getData(), $tableN);
+            //$data = mb_convert_encoding($data, 'UTF-8', 'UTF-8');
             $printer->close();
 
         }catch(\Exception $e)
@@ -221,7 +234,7 @@ class VentaController extends Controller
             //var_dump($e->getMessage());
             //exit();
         }
-        return $data;
+        return $data;//response()->json($data);
     }
 
     public function show($id)
